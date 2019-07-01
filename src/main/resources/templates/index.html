@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket客户端</title>
+</head>
+<body>
+<form onsubmit="return false">
+
+    <!--        <textarea name="message" style="width: 400px;height: 200px"></textarea>-->
+
+    <!--        <input type="button" value="发送数据" onclick="send(this.form.message.value)">-->
+
+    <h3>语音识别结果：</h3>
+
+    <textarea id="responseTest" style="width: 600px;height: 600px"></textarea>
+
+    <br/>
+
+    <input id="sendReal" class="button" type="button" onclick="send(this.value)" value="实时录音">
+
+    <input id="sendOne" class="button2" type="button" onclick="send(this.value)" value="一句话识别">
+
+    <!--    <input id="reset"  type="button" onclick="send(resetText)" value="停止">-->
+
+    <input type="button" onclick="javascript: document.getElementById('responseTest').value=''" value="清空内容">
+
+
+</form>
+
+
+<script type="text/javascript">
+    var sendRealText = '{"code":10086,"action":"1"}';
+    var sendRealTextStop = '{"code":10086,"action":"11"}';
+    var sendOneText = '{"code":10086,"action":"2"}';
+    var sendOneTextStop = '{"code":10086,"action":"22"}';
+    var resetText = '{"code":10086,"action":"0"}';
+    sendReal_ta = document.getElementById("sendReal");
+    sendOne_ta = document.getElementById("sendOne");
+    reset_ta = document.getElementById("reset");
+
+    var class1 = document.getElementsByClassName("button");
+    var class2 = document.getElementsByClassName("button2");
+
+
+    var socket;
+    if (window.WebSocket) {
+        socket = new WebSocket("ws://localhost:11239/websocket");
+        // socket = new WebSocket("ws://localhost:8899/ws");
+        socket.onopen = function (ev) {
+            var ta = document.getElementById("responseTest");
+            ta.value = "连接开启";
+        }
+        socket.onmessage = function (ev) {
+            var ta = document.getElementById("responseTest");
+            ta.value = ta.value + "\n" + ev.data;
+            // client.send(new byte[]{(byte)0x89, (byte)0x00});ping
+
+
+        }
+        socket.onclose = function (ev) {
+            var ta = document.getElementById("responseTest");
+            ta.value = ta.value + "\n" + "连接断开";
+        }
+        socket.onerror = function (ev) {
+            var ta = document.getElementById("responseTest");
+            ta.value = ta.value + "\n" + "连接异常";
+        }
+
+
+    } else {
+        alert("浏览器不支持")
+    }
+
+    function send(message) {
+        if (!window.WebSocket) {
+            return;
+        }
+        if (socket.readyState === WebSocket.OPEN) {
+            if (message === "一句话识别") {
+                sendOne_ta.value = "停止一句话识别";
+                f1(class1);
+                socket.send(sendRealText);
+            } else if (message === "停止一句话识别") {
+                sendOne_ta.value = "一句话识别";
+                f2(class1);
+                socket.send(sendRealTextStop);
+            } else if (message === "实时录音") {
+                sendReal_ta.value = "停止实时录音";
+                f1(class2);
+                socket.send(sendOneText);
+            } else if (message === "停止实时录音") {
+                sendReal_ta.value = "实时录音";
+                f2(class2);
+                socket.send(sendOneTextStop);
+            }
+        } else {
+            alert("连接尚未开启");
+        }
+    }
+
+    function f1(class1) {
+        for (var i = 0; i < class1.length; i++) {
+            class1[i].setAttribute("disabled", "disabled");
+        }
+    }
+
+    function f2(class1) {
+        for (var i = 0; i < class1.length; i++) {
+            class1[i].removeAttribute("disabled");
+            console.log(class1[i]);
+        }
+    }
+</script>
+
+
+</body>
+</html>
